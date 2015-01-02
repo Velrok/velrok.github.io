@@ -4,7 +4,7 @@
   <title><![CDATA[Category: clojure | Mein(un)sinn]]></title>
   <link href="http://Velrok.github.io/blog/categories/clojure/atom.xml" rel="self"/>
   <link href="http://Velrok.github.io/"/>
-  <updated>2014-12-27T20:57:49+00:00</updated>
+  <updated>2015-01-02T11:33:50+00:00</updated>
   <id>http://Velrok.github.io/</id>
   <author>
     <name><![CDATA[velrok]]></name>
@@ -155,7 +155,7 @@ to have the lein command at hand on the machine you may as well use that one.</p
 
 <p><code>ADD ./target/money-balance.jar /opt/money-balance/money-balance.jar</code> copies a local build into the docker image.
 <code>EXPOSE 3000</code> takes care of exposing the webserver port to the host system, which is
-nessesary to allow http connections into the container.
+necessary to allow http connections into the container.
 <code>ENTRYPOINT java -jar money-balance.jar</code> tells docker, that this command should be run
 when the image is started. Thus when a new container comes up it will
 autostart the standalone jar file.</p>
@@ -181,10 +181,10 @@ docker push registry.giantswarm.io/velrok/money-balance:$(cat ./VERSION)
 ```</p>
 
 <p><code>lein ring uberjar</code> creates a standalone jar, which starts the app on port 3000.
-<code>./increment_version.rb $@</code> is a small script, that increaments the version string
+<code>./increment_version.rb $@</code> is a small script, that increments the version string
 in my <code>VERSION</code> file.
 <code>docker build --rm=true -t registry.giantswarm.io/velrok/money-balance:$(cat ./VERSION) .</code>
-instructs docker to build a new image, taged with the giant swarm repository and
+instructs docker to build a new image, tagged with the giant swarm repository and
 my explicit latest version from the <code>VERSION</code> file.
 <code>docker push registry.giantswarm.io/velrok/money-balance:$(cat ./VERSION)</code>
 pushes the image to the giant swarm docker repository, so they can start
@@ -194,14 +194,14 @@ containers with the latest version.</p>
 make sure I never forget to tag my image with the correct repository, because
 docker will publish your image to dockerhub by default.</p>
 
-<p>If you don't care about explicit verisons just use <code>latest</code> and don't maintain
+<p>If you don't care about explicit versions just use <code>latest</code> and don't maintain
 a <code>VERSION</code> file.
 <code>docker build --rm=true -t registry.giantswarm.io/velrok/money-balance:latest .</code></p>
 
 <h2>deploying to giant swarm</h2>
 
 <p>In order to deploy to giantswarm you will need an account and the command
-line client. Follow this <a href="file:///Users/waldemarschwan/webpages/docs.giantswarm.io/installation/cheatsheet/index.html_">setup guide</a>
+line client. Follow this <a href="http://docs.giantswarm.io/installation/cheatsheet/index.html">setup guide</a>
 to get started.</p>
 
 <p>You describe our application in terms of services and components in a <code>swarm.json</code>
@@ -232,31 +232,32 @@ Here is mine:</p>
 
 <p>  ]
 }
-<code>``
-It declares an application named</code>money-balance<code>
-</code>"app_name": "money-balance"<code>, which has only one service</code>money-balance-service<code>
+```</p>
+
+<p>It declares an application named <code>money-balance</code>
+(<code>"app_name": "money-balance"</code>), which has only one service <code>money-balance-service</code>
 with only one component.
-</code>"image": "registry.giantswarm.io/velrok/money-balance:$version"<code>declares that
+<code>"image": "registry.giantswarm.io/velrok/money-balance:$version"</code> declares that
 our container should use our money-balance images, which has been build and
-pushed in the</code>build.sh<code>script.
-</code>$version<code>is a swarm client variable, which can be set later, when we actually
+pushed in the <code>build.sh</code> script.
+<code>$version</code> is a swarm client variable, which can be set later, when we actually
 call the swarm client to start our app.
 It enables us to explicitly name the latest version, without the need to adjust
-the</code>swarm.json<code>file.
-</code>"domains": { "money-balance.velrok.gigantic.io": "3000" }<code>declares that we
+the <code>swarm.json</code> file.
+<code>"domains": { "money-balance.velrok.gigantic.io": "3000" }</code> declares that we
 want our app to be reachable from the internet under the domain name
-</code>money-balance.velrok.gigantic.io<code>and that our app excepts http requests on
+<code>money-balance.velrok.gigantic.io</code> and that our app excepts http requests on
 port 3000.
 Since I'm using a different service for my database, the actual connection string
 for the production database is set via the environment variable
-</code>MONEY_BALANCE_DATABASE_URI`.</p>
+<code>MONEY_BALANCE_DATABASE_URI</code>.</p>
 
 <p>We can start up the app manually now, calling <code>swarm create swarm.json</code> and then
 <code>swarm start money-balance</code>.</p>
 
 <h2>the deploy.sh</h2>
 
-<p>The deploy script is concerned about stooping the old version of the app
+<p>The deploy script is concerned about stoping the old version of the app
 on the host and starting up the latest version instead.</p>
 
 <p><code>bash
@@ -292,7 +293,7 @@ Just be aware, that it will have to download all the project dependencies
 the first time you start it.</p>
 
 <p>Even so <a href="https://giantswarm.io">giantswarm</a> is still in alpha it is working well
-so far. Definatly worth a shot if you are trying to get more experience with
+so far. Definetly worth a shot if you are trying to get more experience with
 docker and want a free (for now) hoster.</p>
 
 <p>My current deployment process is lacking any rollback features as well as any
