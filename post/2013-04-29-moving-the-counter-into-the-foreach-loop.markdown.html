@@ -1,0 +1,33 @@
+<html lang="en"><head><meta charset="UTF-8" /><link href="/css/reset.css" rel="stylesheet" /><link href="/css/highlightjs/github.css" rel="stylesheet" /><script src="/js/highlight.pack.js" type="text/javascript"></script><link href="/css/styles.css" rel="stylesheet" /><link href="/css/typo.css" rel="stylesheet" /><title>Moving the counter into the foreach loop - Mein(un)sin</title></head><body><div id="page"><div id="content"><article><div><p></p><header><h1>Moving the counter into the foreach loop</h1><p></p><p><time class="article-date" date="2013-4-29">2013-04-29</time> </p></header><p></p><p>Recently I did a little code review for a friend of mine. He needed a counter while iterating items of a list. He solved it the same way I did - many times befor, always a little bit annoyed by the fact that I needed to declare and incredent the counter myself.</p><pre><code class="python">
+stuff = ["some thing", "some thing else"]
+
+i = 0
+for thing in stuff:
+  print "processing item {} of {}".format(i + 1, len(stuff))
+  i += 1
+
+</code></pre><p>Python comes with this nice <code>for i in list</code> formulation, so taking care of a counter seperatly seamed wrong.</p><h2>update</h2><p>Big thanks to <a href="https://plus.google.com/108719046880594833475/posts">Rafa Rodríguez</a> for pointing me to <code>enumerate</code></p><pre><code class="python">stuff = ["some thing", "some thing else"]
+
+for i, thing in enumerate(stuff):
+  print "processing item {} of {}".format(i + 1, len(stuff))
+
+</code></pre><p><em>You can skipp the rest :) .</em></p><h2><!--– more –--></h2><p>Indeed I came up with the following refactoring:</p><pre><code class="python">
+stuff = ["some thing", "some thing else"]
+
+for thing, i in zip(stuff, range(len(stuff))):
+  print "processing item {} of {}".format(i + 1, len(stuff))
+
+</code></pre><p><code>zip</code> takes n lists and combines thouse elements into tubles, drawing from all lists, stoping if one of the lists is exeeded. This makes it very usefull in combination with infinit lists.</p><p>Ok now this takes care of incrementing <code>i</code> for us, nice :) . However it's still cumbersome to have to specify the range. What we really want is a lazy sequenze of integers that just counts up starting at a value of our choosing. Python <a href="http://docs.python.org/2/library/itertools.html">itertools</a> to the rescure. The iter tools provide a <code>count()</code> function that returns this generator:</p><pre><code class="python">def count(start=0, step=1):
+    # count(10) --&gt; 10 11 12 13 14 ...
+    # count(2.5, 0.5) -&gt; 2.5 3.0 3.5 ...
+    n = start
+    while True:
+        yield n
+        n += step
+</code></pre><p>So we can rewrite our code to:</p><pre><code class="python">from itertools import count
+
+stuff = ["some thing", "some thing else"]
+
+for thing, i in zip(stuff, count(1))):
+  print "processing item {} of {}".format(i, len(stuff))
+</code></pre><p>Note that by calling <code>count(1)</code> the sequence starts at 1, removing the need to call <code>i + 1</code> in the print statement all together.</p><p>In the end I was very pleased to finally having found - what I belive to be - a beautiefull solution to this problem in python.</p><p>Feel free to comment or contact me on twitter.</p></div></article></div><script type="text/javascript">hljs.initHighlightingOnLoad();</script><footer class="page-footer"><nav><ul><li><a href="/" id="footer_nav_index">&#8613; index</a></li></ul></nav></footer></div></body></html>
