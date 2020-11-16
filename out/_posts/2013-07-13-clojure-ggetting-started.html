@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+    <title>Clojure Getting Started: Setting Up</title>
+    <link href="https://fonts.googleapis.com/css?family=Frank+Ruhl+Libre:300|Roboto" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="../assets/css/simple-grid.css">
+    <link type="text/css" rel="stylesheet" href="../assets/css/my.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h1>Mein (un) sinn</h1>
+        </div>
+
+        <div class="col-12">
+          <h2>Clojure Getting Started: Setting Up</h2>
+        </div>
+
+        <div class="col-12">
+          <article><h2 id="setting-up-a-project"><a class="header-link" href="#setting-up-a-project"></a>Setting Up a Project</h2>
+<p>Clojure runs on the JVM so you need a recent 
+<a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">JDK</a> 
+version installed
+(Java 6 or newer should do).</p>
+<p>To create a new Clojure project we use <a href="https://github.com/technomancy/leiningen">Leiningen</a>.
+On Mac OS it&#39;s just a</p>
+<pre class="hljs"><code><span class="hljs-keyword">brew </span><span class="hljs-keyword">install </span>leiningen</code></pre><p>away.</p>
+<p>This will install Leiningen 2.
+Version 2 breaks compatibility with the old plugin system, but most projects
+that supply Leiningen have a description how to add them to your project.clj
+for each version.
+However if you start a new project, always go with Leiningen 2.</p>
+<p>To create our getting started project (we will name it greenfield-clojure) run:</p>
+<pre class="hljs"><code>lein <span class="hljs-keyword">new</span> <span class="hljs-type">greenfield</span>-clojure</code></pre><p>This will create a new folder. For the rest of this writing all file paths will 
+be relative to this folder.</p>
+<p>You should see a <code>project.clj</code> file looking something like this</p>
+<pre class="hljs"><code>(<span class="hljs-name">defproject</span> greenfield-clojure <span class="hljs-string">"0.1.0-SNAPSHOT"</span>
+  <span class="hljs-symbol">:description</span> <span class="hljs-string">"FIXME: write description"</span>
+  <span class="hljs-symbol">:url</span> <span class="hljs-string">"http://example.com/FIXME"</span>
+  <span class="hljs-symbol">:license</span> {<span class="hljs-symbol">:name</span> <span class="hljs-string">"Eclipse Public License"</span>
+            <span class="hljs-symbol">:url</span> <span class="hljs-string">"http://www.eclipse.org/legal/epl-v10.html"</span>}
+  <span class="hljs-symbol">:dependencies</span> [[org.clojure/clojure <span class="hljs-string">"1.5.1"</span>]])</code></pre><p>As you can see Clojure itself is defined as a dependency.
+As of this writing the latest version is 1.5.1 .</p>
+<p>Now run</p>
+<pre class="hljs"><code>lein deps</code></pre><p>which will download and install all specified dependencies.</p>
+<p>During this project we will add additional dependencies to this project.
+<a href="https://clojars.org/clj-http">CloJars</a> is a repository for Clojure libaries.
+There you can find a lot of interesting stuff.
+You can also include Java dependencies from <a href="http://search.maven.org/">Maven Central</a>.
+Please consult the Leiningen <a href="https://github.com/technomancy/leiningen/blob/stable/sample.project.clj">sample.project.clj</a>
+for further information.</p>
+<!-- more -->
+<h2 id="the-repl"><a class="header-link" href="#the-repl"></a>The REPL</h2>
+<p>The REPL is a interactive environment where you can run Clojure code, in the
+context of your project.</p>
+<p>To start a REPL run:</p>
+<pre class="hljs"><code><span class="hljs-attribute">lein repl</span></code></pre><p>This will also download and install all dependencies that are given in the
+project.clj.</p>
+<p>Now we can start and enter a simple <strong>hello world</strong> into the repl:</p>
+<pre class="hljs"><code>(<span class="hljs-name">println</span> <span class="hljs-string">"Hello world!"</span>)</code></pre><h2 id="setting-up-your-editor"><a class="header-link" href="#setting-up-your-editor"></a>Setting Up Your Editor</h2>
+<h3 id="sublime-text-2"><a class="header-link" href="#sublime-text-2"></a>Sublime Text 2</h3>
+<p>I started out, using Sublime Text 2.
+It&#39;s a good start. I can recommend installing <a href="https://github.com/wuub/SublimeREPL">SublimeREPL</a>.
+Clojure development uses the REPL extensively, so your editor should
+come with some kind of REPL integration.</p>
+<p>I found SublimeREPL to be less stable as I would have liked.
+So I switched to vim.</p>
+<p>One of the best editors for Clojure is Emacs, but I just can&#39;t get
+used to it :). All Emacs folks out there: please leave plugin recommendations
+in the comments, I will integrate them.</p>
+<h3 id="vim"><a class="header-link" href="#vim"></a>vim</h3>
+<p>As mentioned above I switched from Sublime to vim, because of its better REPL 
+integration
+via the <a href="https://github.com/tpope/vim-fireplace">fireplace.vim</a> plugin,
+proved to be more stable.</p>
+<p>Once your setup is complete you will be able to send the complete file or
+single calls - under the cursor - to the REPL.
+Make sure this works. We will use it in the future of this tutorial.
+You can of course just continuously copy and paste the snippets to the REPL by
+hand. However that is very tedious and time consuming.</p>
+<p>You want to use the REPL, because restating the JVM, just to execute one file,
+takes seconds, which makes for a very frustrating feedback cycle.</p>
+<p>While you are at it you might also want to install 
+<a href="https://github.com/kien/rainbow_parentheses.vim">rainbow_parentheses.vim</a>.
+It will highlight matching parenthesis in the same color, while giving each pair
+an individual color.</p>
+<h2 id="structuring-code"><a class="header-link" href="#structuring-code"></a>Structuring Code</h2>
+<h3 id="files-and-namespaces"><a class="header-link" href="#files-and-namespaces"></a>Files and Namespaces</h3>
+<p>If you followed the tutorial and have created the <em>greenfeld_project</em> you will
+find a file called <code>src/greenfeld_project/core.clj</code>.
+This is the default starting point.</p>
+<p>The first line of the file should look like this:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">ns</span></span> greenfield-clojure.core)</code></pre><p><code>ns</code> creates the new <em>namespace</em> <code>greenfeld-clojure</code>.
+Namespaces in Clojure have to respond to the file structure.</p>
+<p>Given a namespace <code>greenfield-clojure.domain.user</code> it will look for a file in 
+<code>src/greenfeld_clojure/domain/user.clj</code>.
+Notice that it uses <code>_</code> for file names and <code>-</code> for the namespaces.</p>
+<p>Lets create a new clj file:</p>
+<pre class="hljs"><code>touch src<span class="hljs-regexp">/greenfield_clojure/u</span>til.clj</code></pre><p>Following the naming schema we start a fitting namespace for that file by
+adding:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">ns</span></span> greenfield-clojure.util)</code></pre><p>All the following definitions will go into that namespace.</p>
+<p>Now lets add a simple greeting function:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">ns</span></span> greenfield-clojure.util)
+
+(<span class="hljs-name"><span class="hljs-builtin-name">defn</span></span> greet [name]
+  (<span class="hljs-name"><span class="hljs-builtin-name">str</span></span> <span class="hljs-string">"Welcome, "</span> name <span class="hljs-string">"!"</span>))</code></pre><p>In the same namespace you can make a test call: <code>(greet &quot;Jane&quot;)</code>.</p>
+<p>If you have your REPL going just put the code below the function definition
+itself and send it to the REPL for evaluation.
+You can remove the code afterwards.</p>
+<p>This way you can quickly sketch together some code and move and refactor later.</p>
+<p>If you use the REPL via command line you can switch to this namespae (or any other valid
+namespace) by calling:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">ns</span></span> greenfield-clojure.util)</code></pre><h3 id="using-code-from-other-namespaces"><a class="header-link" href="#using-code-from-other-namespaces"></a>Using Code from other Namespaces</h3>
+<p>We don&#39;t just want to create namespaces, we want to use stuff that is
+located in other namespaces. We can do so by useing <code>use</code> and <code>require</code>.</p>
+<h4 id="use"><a class="header-link" href="#use"></a>use</h4>
+<p><code>use</code> will include all the vars (function definitions are just vars that point
+to functions) into the current namespace.
+This will NOT pull vars the used namespace itself includes via <code>use</code>.
+None the less: this pollutes you namespace and it gets harder to avoid clashes
+and find where functions are defined.
+However if you want to use clojure core namespaces - for example - it sometimes
+makes for nicer code.</p>
+<p>Here we include <code>clojure.set</code> operations with the <code>use</code> function:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">use</span></span> 'clojure.set)
+(<span class="hljs-name"><span class="hljs-builtin-name">intersection</span></span> #{<span class="hljs-number">1</span> <span class="hljs-number">2</span> <span class="hljs-number">3</span>} #{<span class="hljs-number">3</span> <span class="hljs-number">4</span> <span class="hljs-number">5</span>})</code></pre><p>Notice that we need to quote the namespace, using a <code>&#39;</code>.</p>
+<p>This is useful when working in the REPL itself, but when you write files it&#39;s
+better to include this in the <code>ns</code> call directly useing <code>require</code> instead.</p>
+<h4 id="require"><a class="header-link" href="#require"></a>require</h4>
+<p>We have seen that <code>use</code>, while nice in some cases, pollutes our namespace.</p>
+<p>Instead we use <code>require</code>. Let us require our util namespace from the core
+namespace:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">ns</span></span> greenfield-clojure.core)
+(<span class="hljs-name">require</span> '(<span class="hljs-name">greenfield-clojure</span> [util <span class="hljs-symbol">:as</span> util]))</code></pre><p>Now this is very cumbersome. Instead we can include everything we want to
+require directly in the <code>ns</code> call:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">ns</span></span> greenfield-clojure.core
+  (<span class="hljs-symbol">:require</span> [greenfield-clojure.util <span class="hljs-symbol">:as</span> util]))</code></pre><p>With our utils library required, we can call its functions like this:</p>
+<pre class="hljs"><code>(<span class="hljs-name">util/greet</span> <span class="hljs-string">"Xavier"</span>)</code></pre><p>In clojure the <code>/</code> is used to reference vars from a different namespace.</p>
+<p><strong>Update:</strong>
+Thanks to Pierre Mariani for pointing out that if you want to include
+every var from another namespace into the current namespace like <code>use</code> would
+you can and should use the following variant of require:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">ns</span></span> greenfield-clojure.core
+  (<span class="hljs-symbol">:require</span> [clojure.set <span class="hljs-symbol">:refer</span> [intersection]]))
+
+(<span class="hljs-name"><span class="hljs-builtin-name">intersection</span></span> #{<span class="hljs-number">1</span> <span class="hljs-number">2</span>} #{<span class="hljs-number">2</span> <span class="hljs-number">3</span>})
+<span class="hljs-comment">; =&gt; #{2}</span></code></pre><p>Or if you want to refer everything from the namespace replace 
+<code>[intersection]</code> with <code>:all</code>.</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">ns</span></span> greenfield-clojure.core
+  (<span class="hljs-symbol">:require</span> [clojure.set <span class="hljs-symbol">:refer</span> <span class="hljs-symbol">:all</span>]))</code></pre><p>I admit the hole requiring other namespaces is confusing. But I can also
+promise you that all the other stuff is much more thought thou and has more
+of a theme to it.
+Now if you are interested or still confused 
+<a href="http://blog.8thlight.com/colin-jones/2010/12/05/clojure-libs-and-namespaces-require-use-import-and-ns.html">Colin Jones explains requiring code</a>
+in more detail.</p>
+<h2 id="executing-from-the-command-line"><a class="header-link" href="#executing-from-the-command-line"></a>Executing from the Command Line</h2>
+<p>Util now we only executed our code using a REPL, but at some point in time
+we will want to start our program from the command line.</p>
+<p>There are two ways to do this:</p>
+<ol class="list">
+<li>use leiningen</li>
+<li>package everything up into one big jar file</li>
+</ol>
+<p>In any case our main namespace must contain a <code>-main</code> function that takes
+a variable number of arguments:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">defn</span></span> -main[&amp; args]
+  (<span class="hljs-name">println</span> (<span class="hljs-name">util/greet</span> <span class="hljs-string">"Xavier"</span>)))</code></pre><p>This will just always print the same greeting.</p>
+<h3 id="running-with-leiningen"><a class="header-link" href="#running-with-leiningen"></a>Running with Leiningen</h3>
+<p>Using leiningen we can call:</p>
+<pre class="hljs"><code>lein <span class="hljs-keyword">run</span><span class="bash"> -m greenfield-clojure.core</span></code></pre><p><code>-m</code> tells Leiningen which namespace to use for execution.
+The namespace must include a <code>-main</code> function.
+<em>Notice the <code>-</code> before the main</em>.</p>
+<p>We can also specify the main namespace in our <code>project.clj</code>:</p>
+<pre class="hljs"><code>(<span class="hljs-name">defproject</span> greenfield-clojure <span class="hljs-string">"0.1.0-SNAPSHOT"</span>
+  <span class="hljs-symbol">:description</span> <span class="hljs-string">"FIXME: write description"</span>
+  <span class="hljs-symbol">:url</span> <span class="hljs-string">"http://example.com/FIXME"</span>
+  <span class="hljs-symbol">:license</span> {<span class="hljs-symbol">:name</span> <span class="hljs-string">"Eclipse Public License"</span>
+            <span class="hljs-symbol">:url</span> <span class="hljs-string">"http://www.eclipse.org/legal/epl-v10.html"</span>}
+  <span class="hljs-symbol">:main</span> greenfield-clojure.core
+  <span class="hljs-symbol">:dependencies</span> [[org.clojure/clojure <span class="hljs-string">"1.4.0"</span>]])</code></pre><p>Now we can omit the <code>-m ...</code> part:</p>
+<pre class="hljs"><code>lein <span class="hljs-keyword">run</span><span class="bash"></span></code></pre><h3 id="creating-an-uberjar"><a class="header-link" href="#creating-an-uberjar"></a>Creating an Uberjar</h3>
+<p>We can use Leiningen to package everything up into one big jar that can be
+executed very simply.</p>
+<p>For that we have to set the main namespace (same thing we did above):</p>
+<pre class="hljs"><code>(<span class="hljs-name">defproject</span> greenfield-clojure <span class="hljs-string">"0.1.0-SNAPSHOT"</span>
+  <span class="hljs-symbol">:description</span> <span class="hljs-string">"FIXME: write description"</span>
+  <span class="hljs-symbol">:url</span> <span class="hljs-string">"http://example.com/FIXME"</span>
+  <span class="hljs-symbol">:license</span> {<span class="hljs-symbol">:name</span> <span class="hljs-string">"Eclipse Public License"</span>
+            <span class="hljs-symbol">:url</span> <span class="hljs-string">"http://www.eclipse.org/legal/epl-v10.html"</span>}
+  <span class="hljs-symbol">:main</span> greenfield-clojure.core
+  <span class="hljs-symbol">:dependencies</span> [[org.clojure/clojure <span class="hljs-string">"1.4.0"</span>]])</code></pre><p>But because this will be called directly, we have to tell clojure that it should
+compile the clojure code into a java class when creating the jar.
+To do this add a <code>(:gen-class)</code> argument to the <code>ns</code> call:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">ns</span></span> greenfield-clojure.core
+  (<span class="hljs-symbol">:require</span> [greenfield-clojure.util <span class="hljs-symbol">:as</span> util])
+  (<span class="hljs-symbol">:gen-class</span>))</code></pre><p>This is call AOT (Ahead of Time Compilation).
+It&#39;s sufficient to do this for the main namespace only.
+You should be careful with this. In case implementations of core clojure
+functionality change your ATO compiled code might not be compatible without a
+renewed compilation.</p>
+<p>A call to</p>
+<pre class="hljs"><code><span class="hljs-attribute">lein uberjar</span></code></pre><p>will create a standalone jar in the <code>target</code> folder.</p>
+<p>Run it via</p>
+<pre class="hljs"><code>java -jar target/greenfield-clojure<span class="hljs-number">-0.1</span><span class="hljs-number">.0</span>-SNAPSHOT-standalone.jar</code></pre><h2 id="summary"><a class="header-link" href="#summary"></a>Summary</h2>
+<p>We have done it!</p>
+<p>In this tutorial we:</p>
+<ol class="list">
+<li>setup and installed clojure from scratch</li>
+<li>fired up a REPL for interactive development</li>
+<li>configured our favorite editor (if it is Sublime or vim ;) )</li>
+<li>learned how the file structure matches up to namespaces</li>
+<li>how to create our own namespace</li>
+<li>how to include code from other namespaces</li>
+<li>we used leiningen to run our code from the command line</li>
+<li>bundled everything up in one nice care-free jar that can be pushed around the computing world</li>
+</ol>
+<p>I hope this tutorial was helpful or interesting.</p>
+<p>Any feedback is much appreciated.</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,248 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+    <title>Clojure Lesson Learned</title>
+    <link href="https://fonts.googleapis.com/css?family=Frank+Ruhl+Libre:300|Roboto" rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="../assets/css/simple-grid.css">
+    <link type="text/css" rel="stylesheet" href="../assets/css/my.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-12">
+          <h1>Mein (un) sinn</h1>
+        </div>
+
+        <div class="col-12">
+          <h2>Clojure Lesson Learned</h2>
+        </div>
+
+        <div class="col-12">
+          <article><h2 id="background"><a class="header-link" href="#background"></a>background</h2>
+<p>I started programming Clojure about 5 month ago. So I am fairly new to the
+language. I&#39;m using Clojure to write my master thesis, which is a recommendation
+engine for advertisement.
+When you start to build a recommendation engine stuff like 
+<a href="http://mahout.apache.org/">Mahout</a> can be a big help.
+But it&#39;s java :(, which is very unproductive to write.
+So I looked into jython and jruby, which enable you to write python and ruby
+respectively, that runs on the JVM.
+Sadly neither did the trick. Jython is missing a simple way to bundle
+everything up in one uber.jar while jruby had some issues finding the correct
+constructor for one of the mahout classes :(.
+So I seized that opportunity to learn Clojure, and I regret not a second of it.</p>
+<p>I&#39;m now using Clojure and <a href="https://github.com/technomancy/leiningen">Leiningen</a>.
+I chose <a href="http://incanter.org/docs/parallelcolt/api/">Parallel Colt</a>
+as my matrix library, where I use wrapper functions to provide a nicer
+Clojure interface.</p>
+<p>I use <a href="http://incanter.org/">incanter</a> for basic data analysis and 
+visualisation.</p>
+<!-- more -->
+<h2 id="likes"><a class="header-link" href="#likes"></a>likes</h2>
+<p>The best thing about Clojure are its persistent and immutable data structures.
+Immutable meand that one can not change a basic data structure in place.
+If you need to add a thing to a vector you simple call a function
+that returns a new vector. 
+This is where the persistent part kicks in.
+Persistent means that you are guaranteed the same big O properties.
+Which is to say adding a element to a vector will always take O(1) time no
+matter the size of the vector.
+This is also true for all basic Clojure data structures:</p>
+<ul class="list">
+<li>lists</li>
+<li>vectors</li>
+<li>maps</li>
+<li>sets</li>
+</ul>
+<p>Here is a very good video with Rich Hickey, the father of Clojure, and
+Brian Beckman, where they talk about the inner workings of Clojure.</p>
+<p>I can highly recommend this!</p>
+<iframe width="420" height="315" src="//www.youtube.com/embed/wASCH_gPnDw" frameborder="0" allowfullscreen></iframe>
+
+<p>Clojure is the first lisp that I am using and I fell in love with
+<a href="http://en.wikipedia.org/wiki/S-expression">s-expressions</a>.
+They allow for highly flexible code and with the combination of macros
+enable anyone to extend the language itself!
+Also there are no syntax exceptions or reserved keywords to remember, because
+everything is a list and the first argument is interpreted to be a function.
+Done. Everything else is based on that rules.</p>
+<h2 id="dislike"><a class="header-link" href="#dislike"></a>dislike</h2>
+<p>Now its not all fun and games. Clojure, however powerful, is still a young
+language. So there are some things missing:</p>
+<ul class="list">
+<li><p>I&#39;m still looking for a good debugger. As far as I know <a href="https://github.com/pallet/ritz">ritz</a>
+is the best thing you can get right now. However it&#39;s not trivial to set up 
+if you are not using emacs :(.</p>
+</li>
+<li><p>Running on the JVM comes with a startup time :( .</p>
+</li>
+<li>REPL and <a href="https://github.com/clojure/tools.namespace">tools.namespace</a> to 
+the rescue. Stuart Sierra has an <a href="https://github.com/clojure/tools.namespace">article about his workflow</a>
+which only reloads code from files that have changed and those depending on them.
+I haven&#39;t applied that to my workflow now, because I hadn&#39;t had the need. 
+My REPL startup time is about 2 sec. so its OK considering I only have to
+restart it about 1-3 times a day.</li>
+</ul>
+<h2 id="lessons-learned"><a class="header-link" href="#lessons-learned"></a>lessons learned</h2>
+<p>One of my main motivations to try clojure was to utilize its 
+<a href="http://en.wikipedia.org/wiki/Transactional_memory">STM: Software Transactional Memory</a>
+which enables you to use agents and atoms and a lot of concurrent goodness.
+So I assumed having to think in concurrent terms would be the big obsticle.</p>
+<h3 id="immutable-data-structures-rock!"><a class="header-link" href="#immutable-data-structures-rock!"></a>Immutable data structures rock!</h3>
+<p>It turns out that the biggest brain wracker during the first 2 weeks where
+immutable data structures!
+This things force you to think the other way around. You end up writing 
+recepies on how to create a new thing by applying a function to each element of
+a input instead of writting recepies on how to change something in place.</p>
+<p>Lets assum we want to implement the <a href="http://en.wikipedia.org/wiki/Conway&#39;s_Game_of_Life">game of live</a>.</p>
+<p>In python a update function could look something like this:</p>
+<p><code>`</code>python a posible update world function in python 
+def update(world):
+  new_world = [] 
+  for y, row in enumerate(world):
+    new_row = []
+    for x, cell in enumerate(row):
+      new_row.append(next_cell_state(world, y, x))
+    new_world.append(new_row)
+  return new_world</p>
+<pre class="hljs"><code>
+<span class="hljs-symbol">This</span> <span class="hljs-meta">function</span> creates a new world <span class="hljs-keyword">and </span><span class="hljs-keyword">adds </span>stuff to <span class="hljs-keyword">it </span><span class="hljs-meta">while</span> <span class="hljs-keyword">it </span><span class="hljs-keyword">iterates </span>the
+<span class="hljs-symbol">input</span> world.
+<span class="hljs-symbol">This</span> is typical state manipulating <span class="hljs-meta">code</span>.
+
+<span class="hljs-symbol">With</span> immutable <span class="hljs-meta">data</span> <span class="hljs-keyword">structures </span><span class="hljs-keyword">and </span>functional programming one has to think
+<span class="hljs-symbol">differently</span>:
+
+```clojure a posible update world <span class="hljs-meta">function</span> in clojure 
+(defn update [world]
+  (<span class="hljs-meta">map</span>-indext (<span class="hljs-meta">fn</span> [y row]
+                (<span class="hljs-meta">map</span>-indext (<span class="hljs-meta">fn</span> [x cell]
+                              (next-cell-state world y x))
+                            row))
+              world))</code></pre><p>In the Clojure version we use map to apply a function to each row and then
+another map to apply another function to each cell. Each map call returns a
+sequence that is implicitly build and returned.
+At no point in time can we change the input world nor do we change a already
+created object.</p>
+<p>You can of course write functional code in python using map. However 
+pyhton doesn&#39;t ensure that you do not change the datastructure in place by 
+accident.</p>
+<h3 id="use-require-instead-of-use"><a class="header-link" href="#use-require-instead-of-use"></a>use require instead of use</h3>
+<p>Namespaces and including and referencing code from other packages was vey
+confusing to me, because to do so you can use <code>(use)</code> <code>(require)</code> and <code>(import)</code>.</p>
+<p>When applying <code>use</code> all the functions are imported into the current namespace:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">ns</span></span> my.core
+  (<span class="hljs-symbol">:use</span> [my-lib.core]))
+
+(<span class="hljs-name">hello</span> <span class="hljs-string">"world"</span>)</code></pre><p>Where <code>require</code> lets you alias packages:</p>
+<pre class="hljs"><code>(<span class="hljs-name"><span class="hljs-builtin-name">ns</span></span> my.core
+  (<span class="hljs-symbol">:require</span> [my-lib.core <span class="hljs-symbol">:as</span> core]))
+(<span class="hljs-name">core/hello</span> <span class="hljs-string">"world"</span>)</code></pre><h3 id="inject-state-into-functions"><a class="header-link" href="#inject-state-into-functions"></a>inject state into functions</h3>
+<p>One thing that stuck right in my head from the beginning was that everything a 
+function operates on should be past in as an argument instead of
+using a gloabel var.
+Stuard Sierra gave a talk titled 
+<a href="http://www.infoq.com/presentations/Clojure-Large-scale-patterns-techniques">Clojure in the Large</a>
+that points out why this is the right way to do things and gives tips and 
+examples on how to achive this goal in the large.</p>
+<h3 id="don't-overuse-->>-and-->"><a class="header-link" href="#don't-overuse-->>-and-->"></a>Don&#39;t overuse -&gt;&gt; and -&gt;</h3>
+<p>It took me a while to understand the 
+<a href="http://clojure.github.io/clojure/clojure.core-api.html#clojure.core/-">-&gt;</a> 
+and 
+<a href="http://clojure.github.io/clojure/clojure.core-api.html#clojure.core/-&gt;">-&gt;&gt;</a> 
+operations.
+You can use thouse to build a pipeline. Which is a beautyfull construct in
+many situations. </p>
+<pre class="hljs"><code><span class="hljs-comment">; using plain clojure calls:</span>
+<span class="hljs-comment">; one has to start at the last call, making this difficult to follow</span>
+(<span class="hljs-name"><span class="hljs-builtin-name">filter</span></span> #(<span class="hljs-name"><span class="hljs-builtin-name">=</span></span> <span class="hljs-number">0</span> (<span class="hljs-name"><span class="hljs-builtin-name">rem</span></span> % <span class="hljs-number">4</span>)) <span class="hljs-comment">; only include the ones that are multiple of 4</span>
+        (<span class="hljs-name"><span class="hljs-builtin-name">map</span></span> #(<span class="hljs-name"><span class="hljs-builtin-name">+</span></span> <span class="hljs-number">1</span> %) <span class="hljs-comment">; add one to each</span>
+             (<span class="hljs-name"><span class="hljs-builtin-name">map</span></span> #(<span class="hljs-name"><span class="hljs-builtin-name">*</span></span> <span class="hljs-number">3</span> %) <span class="hljs-comment">; multiply each by 3</span>
+                  (<span class="hljs-name"><span class="hljs-builtin-name">filter</span></span> odd? <span class="hljs-comment">; only include the odd ones</span>
+                          (<span class="hljs-name"><span class="hljs-builtin-name">range</span></span> <span class="hljs-number">20</span>))))) <span class="hljs-comment">; numbers from 0 to 19</span>
+<span class="hljs-comment">; =&gt; (4 16 28 40 52)</span>
+
+<span class="hljs-comment">; using the -&gt;&gt; pipe, where the result of the last call</span>
+<span class="hljs-comment">; is used as the last argument in the next function</span>
+(<span class="hljs-name"><span class="hljs-builtin-name">-&gt;&gt;</span></span> (<span class="hljs-name"><span class="hljs-builtin-name">range</span></span> <span class="hljs-number">20</span>) 
+     (<span class="hljs-name"><span class="hljs-builtin-name">filter</span></span> odd?)
+     (<span class="hljs-name"><span class="hljs-builtin-name">map</span></span> #(<span class="hljs-name"><span class="hljs-builtin-name">*</span></span> <span class="hljs-number">3</span> %))
+     (<span class="hljs-name"><span class="hljs-builtin-name">map</span></span> #(<span class="hljs-name"><span class="hljs-builtin-name">+</span></span> <span class="hljs-number">1</span> %))
+     (<span class="hljs-name"><span class="hljs-builtin-name">filter</span></span> #(<span class="hljs-name"><span class="hljs-builtin-name">=</span></span> <span class="hljs-number">0</span> (<span class="hljs-name"><span class="hljs-builtin-name">rem</span></span> % <span class="hljs-number">4</span>))))
+<span class="hljs-comment">; =&gt; (4 16 28 40 52)</span></code></pre><p>However when you find yourself writing huge anonymous functions
+that draw from previus defined variables for example in a 
+<a href="http://clojure.github.io/clojure/clojure.core-api.html#clojure.core/let">let</a>
+it is probably time to reconsider your code :) and use plain let to
+store and name intermediat results.</p>
+<h3 id="test-first!"><a class="header-link" href="#test-first!"></a>Test first!</h3>
+<p>This is and remains true. You shall test first and implement later!</p>
+<p>Beeing new to the language the REPL helped me a lot.
+I used it to experiment with code snippets quickly. 
+Especially when you are not sure how the output of a function looks exactly,
+it&#39;s nice to play around with it a little in the REPL.</p>
+<p>However I missed going back and fixiate this in test cases.
+I got lazy and tried to cut corners by skipping the tests.
+Gues what it came back to bite me only 2 weeks later. Write tests!</p>
+<p>The default Test framework for Clojure seams to be 
+<a href="https://github.com/marick/Midje">midje</a>.
+However I liked my classical TDD/BDD DSL so I used <a href="http://speclj.com/">speclj</a>.
+Running <code>lein spec -a</code> on the command line will autotest all the functions and
+rerun tests of files that were changed.
+It does keep a JVM running so it&#39;s fast.
+However, every time you remove definitions you need to restart the call, because
+it will keep the old definition around. 
+So if you still have code that depends on the allegedly removed function your 
+test will not fail until you restart the JVM.</p>
+<h3 id="making-things-run-on-multiple-cores-is-easy."><a class="header-link" href="#making-things-run-on-multiple-cores-is-easy."></a>Making things run on multiple cores is easy.</h3>
+<p>If you use <code>map</code> a lot making things run on multiple cores is easy:
+just replace <code>map</code> with a <code>pmap</code>. This will execute the function in parallel using
+multiple cores.
+While this is a valid and easy step, it is only beneficial if the function
+takes some time to run. Otherwise the overhead of <code>pmap</code> will midigate the effect
+and you end up beeing slower.
+So start at the out calls and see how far you can get.</p>
+<p>If you need better prallel performance Clojure gives you the new 
+<a href="http://clojure.com/blog/2012/05/08/reducers-a-library-and-model-for-collection-processing.html">reducers</a>.
+They sacrifice lazyness to give you a fork join abstraction that uses map
+reduce semantics.
+I did read the article, but did not have the time to experiment a lot with it.</p>
+<p>Also <a href="https://github.com/clojure/core.async">core.async</a>
+gives you Go like lightweight threads and channel semantics.
+Drew Olson has a nice 
+<a href="http://blog.drewolson.org/blog/2013/07/04/clojure-core-dot-async-and-go-a-code-comparison/">article comparing clojure core.async with go</a>.</p>
+<h2 id="vim-and-clojure"><a class="header-link" href="#vim-and-clojure"></a>vim and clojure</h2>
+<p>I started to code Clojure using Sublime.
+While it has a nice REPL, which shows the last command send to it, it turned out
+to be quiet unstable :( .
+So I switched to vim using <a href="https://github.com/tpope/vim-fireplace">vim-fireplace</a>,
+which REPL integration is more stable.
+It also comes with invaluable :Doc and :Source commands which deliver the 
+documentation of the source of a function, respectively.
+Sadly ctags has no support for Clojure, but you can use the lisp version for now.
+You don&#39;t want to miss out on <a href="https://github.com/kien/rainbow_parentheses.vim">rainbow parentheses</a> 
+;).
+The vim commands <code>y%</code>and <code>d%</code> are big time and brain power savers, because they
+let you copy or delete a complete s-expression.</p>
+<h2 id="conclusion"><a class="header-link" href="#conclusion"></a>conclusion</h2>
+<p>There are many things I like about Clojure so far.
+It has great java integration and dependency management, it&#39;s dynamic and fast.
+Learning it is not easy, if you come from a traditional OO background but it is 
+worth your time, because you will become a better developer.
+Obviously I didn&#39;t spent enough time with it to feel the pain every tool brings
+with it if you use it intensively.
+The development setup is decent while not perfect jet, but it is still quiet a 
+young language.</p>
+<p>I can recommend you give it a spin :) .</p>
+<p>If you live in the cologne area you can find me at the 
+<a href="http://www.meetup.com/clojure-cologne/">Cologne Clojure User Group</a>,
+or just leave me a comment :) .</p>
+<p>Thanks for reading all my ramblings ;).
+I hope it was worth your time.</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
