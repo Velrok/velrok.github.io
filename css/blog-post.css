@@ -1,0 +1,120 @@
+.pfooterooter {
+  margin: 1rem 0px;
+}
+
+.page-footer > nav > ul {
+  display: flex;
+  justify-content: space-between;
+}
+
+.article-date {
+  display: block;
+  font-size: 0.618em;
+  text-align: right;
+  margin-bottom: 2rem;
+  float: right;
+}
+
+#blog-post a {
+  text-decoration: underline;
+}
+
+.comments {
+  grid-area: footer;
+  margin-top: 5rem;
+}
+
+@media only screen and (max-width: 1200px) {
+  .left-sidebar {
+    display: none;
+  }
+
+  .link-aside {
+    display: none;
+  }
+}
+
+@media only screen and (min-width: 1200px) {
+  #page {
+    width: 100%;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 35em 1fr;
+    grid-template-rows: 10em auto 5em;
+    grid-template-areas:
+      '.     heading .'
+      'index page    aside'
+      'index footer  aside';
+  }
+
+  .website-header {
+    grid-area: heading;
+  }
+
+  .left-sidebar {
+    padding-right: 1em;
+    grid-area: index;
+    margin: 0px auto;
+    margin-top: 8rem;
+    max-width: 16em;
+    font-size: 0.85em;
+    font-weight: 100;
+  }
+
+  .left-sidebar h2 {
+    margin-top: 0em;
+    font-size: 1.2em;
+  }
+
+  .left-sidebar .article-date {
+    display: none;
+  }
+
+  .left-sidebar #page-index {
+    border-bottom: none;
+    border-top: none;
+  }
+
+  .left-sidebar li:hover {
+    border-bottom: solid black 1px;
+  }
+
+  .left-sidebar li {
+    border-bottom: solid #ddd 1px;
+    margin-bottom: 1em;
+  }
+
+  .link-aside {
+    display: block;
+    width: 18em;
+
+    float: right;
+    clear: right;
+    margin-right: -21em;
+    margin-bottom: 1.5em;
+
+    border-top: solid #ececec 1px;
+
+    font-size: 0.7em;
+    font-style: normal;
+  }
+
+  .link-aside--url {
+    font-size: 0.7em;
+    font-weight: 100;
+  }
+
+  .link-aside--url--link {
+    text-decoration: none !important;
+  }
+
+  #blog-post {
+    grid-area: page;
+    padding: 0px 1em;
+    padding-bottom: 2rem;
+  }
+
+  .page-footer {
+    grid-area: footer;
+  }
+}

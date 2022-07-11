@@ -1,0 +1,61 @@
+<html lang="en"><head><meta charset="UTF-8" /><meta content="width=device-width, initial-scale=1" name="viewport" /><link href="/css/reset.css" rel="stylesheet" /><link href="/css/highlightjs/github.css" rel="stylesheet" /><script src="/js/highlight.pack.js" type="text/javascript"></script><link href="/css/styles.css" rel="stylesheet" /><link href="/css/tablets.css" rel="stylesheet" /><link href="/css/blog-post.css" rel="stylesheet" /><style>@import url('https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap&text=Mein%28un%29sin</style><title>Clojure: making a case for case - Mein(un)sin</title></head><body class="body"><div id="page"><header class="website-header"><h1 id="website-title"><a href="/">Mein(un)sin</a></h1><span class="website-subtitle">my (non) sense</span></header><div class="left-sidebar"><h2>All posts</h2><div id="page-index"><ul><li><a href="/post/2022-06-23-the-beauty-of-text-uis.markdown.html">The beauty of text UIs</a><span class="article-date">2022-06-23</span></li><li><a href="/post/2021-12-01-request-for-comments-rfc.markdown.html">Request for comments RFC</a><span class="article-date">2021-12-01</span></li><li><a href="/post/2021-10-10-the-roma-d&amp;d-setting.markdown.html">The Roma D&D Setting</a><span class="article-date">2021-10-10</span></li><li><a href="/post/2021-06-26-taking-notes-with-neovim.markdown.html">Taking notes with neovim</a><span class="article-date">2021-06-28</span></li><li><a href="/post/2021-06-26-command-line-tool-renaissance.markdown.html">Command line tool renaissance</a><span class="article-date">2021-06-26</span></li><li><a href="/post/2021-03-17-clojure:-making-a-case-for-case.markdown.html">Clojure: making a case for case</a><span class="article-date">2021-03-17</span></li><li><a href="/post/2020-11-23-dev-setup-2020.markdown.html">Dev setup 2020</a><span class="article-date">2020-11-23</span></li><li><a href="/post/2020-11-16-writting-clojure-cli-tools-with-joker.markdown.html">Writing Clojure cli tools with joker</a><span class="article-date">2020-11-16</span></li><li><a href="/post/2019-03-26-github-pull-request-template-example.md.html">A github pull request template example</a><span class="article-date">2019-03-26</span></li><li><a href="/post/2014-12-05-versioning-work-notes-with-git-on-mac.markdown.html">Versioning work notes with git on mac</a><span class="article-date">2014-12-5</span></li><li><a href="/post/2014-12-21-deploying-clojure-apps-on-giant-swarm-docker.markdown.html">Deploying clojure apps on giant swarm (docker)</a><span class="article-date">2014-12-21</span></li><li><a href="/post/2014-01-26-moving-to-london-banks-and-money.markdown.html">Moving to London: Banks and Money</a><span class="article-date">2014-1-26</span></li><li><a href="/post/2014-05-17-developers-love-bacon-conference.markdown.html">Developers Love Bacon - conference</a><span class="article-date">2014-05-17</span></li><li><a href="/post/2013-07-04-clojure-lesson-learned.markdown.html">Clojure lesson learned</a><span class="article-date">2013-9-27</span></li><li><a href="/post/2013-07-13-clojure-ggetting-started.markdown.html">Clojure getting started: setting up</a><span class="article-date">2013-7-17</span></li><li><a href="/post/2013-04-29-moving-the-counter-into-the-foreach-loop.markdown.html">Moving the counter into the foreach loop</a><span class="article-date">2013-4-29</span></li><li><a href="/post/2013-04-29-hello-world.markdown.html">Hello world, again</a><span class="article-date">2013-4-29</span></li></ul></div></div><div id="blog-post"><article><div><header><h1>Clojure: making a case for case</h1> <time class="article-date" date="2021-03-17">2021-03-17</time> </header><p>I recently came across a usage pattern in our services where we would overuse clojures dynamic function dispatch. I would like to submit an opinion on when to use a simple case statement instead.</p><h2>The use case</h2><p>The fundamental need here is to choose a different implementation based on some attribute of the input.</p><p>I observed two instances: a) when receiving a message we need to choose the service that should handle it b) during start-up we have different modes we need to start the app in (persists incoming data / provide an API on top of the DB).</p><h2>About multi methods and case statements</h2><aside class="link-aside"><div class="link-aside--title">defmulti docs</div><div class="link-aside--url"><a class="link-aside--url--link" href="https://clojuredocs.org/clojure.core/defmulti" target="_blank">https://clojuredocs.org/clojure.core/defmulti</a></div></aside><aside class="link-aside"><div class="link-aside--title">defmethod docs</div><div class="link-aside--url"><a class="link-aside--url--link" href="https://clojuredocs.org/clojure.core/defmethod" target="_blank">https://clojuredocs.org/clojure.core/defmethod</a></div></aside><p>Clojure has <code>defmulti</code> (<a href="https://clojuredocs.org/clojure.core/defmulti">defmulti docs</a>) which declares a function with dynamic runtime dispatch, paired with <code>defmethod</code> (<a href="https://clojuredocs.org/clojure.core/defmethod">defmethod docs</a>) which defines an implementation. This can be very powerful specially in libraries, where you might want to leave the implementation open for further specialisation later on, or where knowing all cases would be impossible ahead of time.</p><aside class="link-aside"><div class="link-aside--title">Example from clojure.org</div><div class="link-aside--url"><a class="link-aside--url--link" href="https://clojure.org/about/runtime_polymorphism" target="_blank">https://clojure.org/about/runtime_polymorphism</a></div></aside><p><a href="https://clojure.org/about/runtime_polymorphism">Example from clojure.org</a>:</p><pre><code class="clojure">(defmulti encounter
+  (fn [x y] [(:Species x) (:Species y)]))
+(defmethod encounter [:Bunny :Lion] [b l] :run-away)
+(defmethod encounter [:Lion :Bunny] [l b] :eat)
+(defmethod encounter [:Lion :Lion] [l1 l2] :fight)
+(defmethod encounter [:Bunny :Bunny] [b1 b2] :mate)
+(def b1 {:Species :Bunny :other :stuff})
+(def b2 {:Species :Bunny :other :stuff})
+(def l1 {:Species :Lion :other :stuff})
+(def l2 {:Species :Lion :other :stuff})
+(encounter b1 b2)
+-&gt; :mate
+(encounter b1 l1)
+-&gt; :run-away
+(encounter l1 b1)
+-&gt; :eat
+(encounter l1 l2)
+-&gt; :fight
+</code></pre><aside class="link-aside"><div class="link-aside--title"><code>case</code> macro</div><div class="link-aside--url"><a class="link-aside--url--link" href="https://clojuredocs.org/clojure.core/case" target="_blank">https://clojuredocs.org/clojure.core/case</a></div></aside><p>The humble <a href="https://clojuredocs.org/clojure.core/case"><code>case</code> macro</a> in constrast only allows a fixed set of cases to be handled. All need to be known during definition and it can't be extended dynamically by code outside that expression.</p><pre><code>(case meal-time
+  :breakfast "Jam on toast."
+  :lunch     "Ham sandwitch."
+  :dinner    "Roast dinner.")
+</code></pre><p>I think it's the extra power of <code>defmulti</code> that makes it appealing.</p><h2>Making the case</h2><p>Lets revisit our initial case again, in the context of our app:</p><p>a) we receive a message and need to dynamically choose the service that should handle it b) during start-up we have different modes we need to start the app in</p><p>The main insight here is that in both cases (a and b) we actually know the full list of supported services or modes, so a simple case statement will suffice. </p><p>Let's concider an example for a)</p><p><strong>PS: The code is indended for illustration purposes only and not is not complete.</strong></p><p>Base file</p><pre><code class="clojure">(ns supplier-change
+  (:require
+    [super-power] ;; only here for side effects
+    [mega-power]  ;; only here for side effects
+    ))
+
+(defmulti handle-supply-change
+  (fn [contract] (:supplier-id contract)))
+
+;; called if no other implementation is found
+(defmethod handle-supply-change :default
+  [contract]
+  (panic! "We don't work with " (:supplier-id contract))) 
+</code></pre><p>Supplier super-power</p><pre><code class="clojure">(ns super-power
+  (:require [super-power-api]))
+
+(defmethod handle-supply-change :super-power
+  [contract]
+  (super-power-api/take-over contract))
+</code></pre><p>Supplier mega-power</p><pre><code class="clojure">(ns mega-power
+  (:require [mega-power-api]))
+
+(defmethod handle-supply-change :mega-power
+  [contract]
+  (mega-power-api/take-over contract))
+</code></pre><p>The main benefit of multi methods, which is to allow for an open implementation, is of little use here since we will need to implement any additional suppliers in any case. The downsides are that 1) we have to make sure that all supplier namespaces are required, and therefor loaded during startup, or risk running into the panic case. 2) the panic default implementation is a hint here that we actually have a fixed list of supported suppliers in mind, but the <code>defmethods</code> are in other files, and nothing explicitly mentions them. We are instead implicitly loading them as a side effect of requiring their namespaces. This has poor discover-ability.</p><p>Let's replace this with a simple case statement:</p><pre><code>(ns supplier-change
+  (:require
+    ;; require apis directly
+    [super-power-api]
+    [mega-power-api]))
+
+(defn handle-supply-change
+  [contract]
+  (case (:supplier-id contract)
+    :super-power (super-power-api/take-over contract)
+    :mega-power  (mega-power-api/take-over contract)
+    ;; default case
+    (panic! "We don't work with " (:supplier-id contract))))
+</code></pre><h2>In summary</h2><p>Multi-methods are a powerful tool, which allows for open implementations in Clojure. However when writing application level code consider if the implementation is actually truly open or if you are actually looking to dispatch to a fixed and known set of functions.</p><p>If the set of functions is known and exhaustive at least for now, than <code>case</code> provides better readability.</p><p>Seeing a default implementation for <code>defmethod</code>, which just throws some sort of error is an indicator that a case might be more appropriate here.</p></div></article></div><script type="text/javascript">hljs.initHighlightingOnLoad();</script><footer class="page-footer"><nav><ul><li></li><li><a href="/" id="footer_nav_index">&#8613; index</a></li><li></li></ul></nav></footer><div class="comments"><script async="async" crossorigin="anonymous" issue-term="pathname" label="utterance-comment" repo="Velrok/velrok.github.io" src="https://utteranc.es/client.js" theme="github-light"></script></div></div></body></html>
