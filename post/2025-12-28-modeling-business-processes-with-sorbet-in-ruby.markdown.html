@@ -1,0 +1,129 @@
+<html lang="en"><head><meta charset="UTF-8" /><meta content="width=device-width, initial-scale=1" name="viewport" /><link href="/css/reset.css" rel="stylesheet" /><link href="/css/highlightjs/github.css" rel="stylesheet" /><script src="/js/highlight.pack.js" type="text/javascript"></script><link href="/css/styles.css" rel="stylesheet" /><link href="/css/tablets.css" rel="stylesheet" /><link href="/css/blog-post.css" rel="stylesheet" /><style>@import url('https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap&text=Mein%28un%29sin</style><title>Exhaustiveness checks for a saner future - Mein(un)sin</title></head><body class="body"><div id="page"><header class="website-header"><h1 id="website-title"><a href="/">Mein(un)sin</a></h1><span class="website-subtitle">my (non) sense</span></header><div id="blog-post"><article><div><header><h1>Exhaustiveness checks for a saner future</h1> <time class="article-date" date="2025-12-28">2025-12-28</time> </header><h2>Motivation</h2><p>At work, modelling business processes is the main thing we do. We do it with Ruby and Sorbet, which is an optional type system for Ruby. Sorbet is great because it allows us to express business concepts as types, which in turn means the type checker can automatically highlight where interactions between these concepts are ill-defined.</p><aside class="link-aside"><div class="link-aside--title">exhaustiveness checks</div><div class="link-aside--url"><a class="link-aside--url--link" href="https://sorbet.org/docs/exhaustiveness" target="_blank">https://sorbet.org/docs/exhaustiveness</a></div></aside><p>The most powerful tool is <a href="https://sorbet.org/docs/exhaustiveness">exhaustiveness checks</a>, which Sorbet supports for <code>T::Enum</code> and <code>T.any</code>.</p><p>If used correctly, this enables us to lean on the type checker to highlight where a new variant impacts existing code in a complex system maintained and developed by multiple people.</p><p>At work we maintain an accounting system which implements various accounting rules in response to a set of financial events (event handlers and services). Over time business rules change which may mean that some of these handlers and services need to behave differently for different versions. Mortgages transition from one version to the next individually.</p><p>I use <code>T::Enum</code> for the accounting version property on the mortgage (which defines existing versions 1-3). So when my colleague had to introduce a new version he could rely on the type checker to highlight all the places where he needed to define the behaviour for the new version.</p><aside class="link-aside"><div class="link-aside--title">tagged union</div><div class="link-aside--url"><a class="link-aside--url--link" href="https://en.wikipedia.org/wiki/Tagged_union" target="_blank">https://en.wikipedia.org/wiki/Tagged_union</a></div></aside><p>Both <code>T::Enum</code> and <code>T.any</code> behave like a <a href="https://en.wikipedia.org/wiki/Tagged_union">tagged union</a>, meaning they define a fixed set of different types. At runtime a value keeps track of which of those types it currently holds.</p><p>I'll first explain <code>T::Enum</code> then <code>T.any</code> and finish with a discussion on pros and cons and when to prefer one over the other.</p><p>This article assumes a basic familiarity with programming and types. The examples will be in Ruby.</p><aside class="link-aside"><div class="link-aside--title">Gleam</div><div class="link-aside--url"><a class="link-aside--url--link" href="https://gleam.run" target="_blank">https://gleam.run</a></div></aside><p>If you are not familiar with types and would like to learn them, I can recommend <a href="https://gleam.run">Gleam</a> — a very simple language with excellent tooling and a great type system.</p><h2>T::Enum</h2><aside class="link-aside"><div class="link-aside--title">T::Enum</div><div class="link-aside--url"><a class="link-aside--url--link" href="https://sorbet.org/docs/tenum" target="_blank">https://sorbet.org/docs/tenum</a></div></aside><p><a href="https://sorbet.org/docs/tenum">T::Enum</a> is just an enumeration, meaning it acts like a list of known values. However these values can't themselves hold any data.</p><p>Example from the official docs:</p><pre><code class="ruby"># (1) New enumerations are defined by
+# creating a subclass of T::Enum
+class Suit &lt; T::Enum
+  # (2) Enum values are declared within
+  # an `enums do` block
+  enums do
+    Spades = new
+    Hearts = new
+    Clubs = new
+    Diamonds = new
+  end
+end
+</code></pre><p>The <code>Suit</code> values themselves can't hold any extra data. So to represent an Ace of Spades we would need to wrap this <code>T::Enum</code> inside another class.</p><h3>Different representations</h3><p><code>T::Enum</code> values can have methods that dispatch on <code>self</code>, which lets us give each variant a different representation — but they still can't wrap other data.</p><pre><code class="ruby">class Suit &lt; T::Enum
+    # ... above implementation
+    def icon
+        case self
+        when Spades: "♠️"
+        when Hearts: "❤️"
+        when Clubs: "♣️"
+        when Diamonds: "♦️"
+        else
+            # this is where sorbet will throw
+            # type errors if we were to ever
+            # expand on the types of available
+            # Suits
+            T.absurd(self)
+        end
+    end
+end
+</code></pre><p>This example also shows how <code>case</code> can be used with <code>T.absurd(var)</code> to enable the exhaustiveness check.</p><h3>A practical example</h3><p>Let's return to the earlier example of versioning the accounting logic for mortgages. To show how exhaustiveness checks help us keep track of all the interactions, we need to flesh it out a bit.</p><p>We will model a Mortgage to have an <code>accounting_version</code>, which returns an Enum:</p><pre><code class="ruby">
+class AccountingVersion &lt; T::Enum
+    enums do
+        # use simple int values rather than
+        # the default string values to
+        # optimize DB storage
+        V1 = new(1)
+        V2 = new(2)
+    end
+end
+
+class Mortgage
+    sig {returns(AccountingVersion)}
+    def accounting_version
+        # read serialized value from DB,
+        # then deserialize into Enum value
+    end
+end
+
+</code></pre><p>Let's say we have two financial events we need to model for a mortgage.</p><ol><li>Payment received</li><li>Payment due</li></ol><pre><code class="ruby">
+class PaymentReceivedHandler
+
+    sig {params(mortgage: Mortgage, event: Event)}
+    def self.call(mortgage:, event)
+        # sorbet needs a var to perform
+        # exhaustiveness checks, so we can't
+        # use the method call directly, but
+        # instead need to assign the value to
+        # a local var first.
+        version = mortgage.accounting_version()
+        case version
+            when AccountingVersion::V1,
+                 AccountingVersion::V2
+            # move money into a current account
+        else
+            # absurd is only defined on vars
+            T.absurd(version)
+        end
+    end
+end
+
+class PaymentDueHandler
+    sig {params(mortgage: Mortgage, event: Event)}
+    def self.call(mortgage:, event)
+        # sorbet needs a var to perform
+        # exhaustiveness checks, so we can't
+        # use the method call directly, but
+        # instead need to assign the value to
+        # a local var first.
+        version = mortgage.accounting_version()
+        case version
+            when AccountingVersion::V1,
+                 AccountingVersion::V2
+            # use money in the holding account;
+            # no overdraft logic
+            # if holding is &lt; then due customers
+            # will be in arrears
+        else
+            # absurd is only defined on vars
+            T.absurd(version)
+        end
+    end
+end
+</code></pre><p>Now let's say the requirements have changed: in the <code>PaymentDueHandler</code> we now need to categorise any potential arrears into a repayment and an interest portion. Just adding a <code>V3</code> to <code>AccountingVersion</code> would now make both <code>case</code> statements fail with a helpful type error, stating that the match is incomplete and that the <code>V3</code> branch is missing.</p><p>In the <code>PaymentReceivedHandler</code> case we can just add <code>V3</code> to the existing list. For the <code>PaymentDueHandler</code> we would need to add a new <code>when</code> clause with the new logic.</p><p>In this small example it was easy to remember all the places we needed to make changes, but in our actual code base we have around 15 different handlers, each of which may or may not need to behave differently.</p><p>Even just adding a new version to the existing <code>when</code> clause means we have at least considered that handler and decided no new logic was required.</p><h3>Limitation of T::Enum</h3><p><code>T::Enum</code> values like a <code>V1</code> or a <code>Hearts</code> can't store data inside them. This makes them unusable for something like an <code>Event</code> type where we would also have a fixed list of possible values, but each event may contain its own data.</p><p>In these cases we need to reach for the more complex and generic <code>T.any</code>.</p><h2>T.any</h2><aside class="link-aside"><div class="link-aside--title">T.any</div><div class="link-aside--url"><a class="link-aside--url--link" href="https://sorbet.org/docs/union-types" target="_blank">https://sorbet.org/docs/union-types</a></div></aside><p><a href="https://sorbet.org/docs/union-types">T.any</a> is Sorbet's union type. It can only be defined as a list of Ruby classes: <code>T.any(SomeType, SomeOtherType, ...)</code> like <code>T.any(Integer, String)</code> meaning either a whole number or a string.</p><h3>A practical example</h3><p>Events are a good example of a finite list of values where each variant carries its own data.</p><pre><code class="ruby">class PaymentReceivedEvent
+  sig { returns(Cents) }
+  attr_reader :amount_received
+end
+
+class PaymentDueEvent
+  sig { returns(Cents) }
+  attr_reader :amount_due
+end
+
+# Event is a type alias for a union of
+# PaymentReceivedEvent and PaymentDueEvent
+Event = T.type_alias {
+  T.any(
+    PaymentReceivedEvent,
+    PaymentDueEvent
+  )
+}
+</code></pre><p>Note how both <code>PaymentReceivedEvent</code> and <code>PaymentDueEvent</code> define different properties.</p><p>A simple event processor could dispatch on event type:</p><pre><code class="ruby">class EventProcessor
+    sig {params(event: Event)}
+    def self.call(event:)
+        case event
+        when PaymentReceivedEvent:
+            PaymentReceivedHandler(event:)
+        when PaymentDueEvent:
+            PaymentDueHandler(event:)
+        else
+            # if we were to add more events
+            # this would fail type checking and
+            # we would be reminded to implement
+            # a handler for the new event
+            T.absurd(event)
+        end
+    end
+end
+
+</code></pre><p>Unlike TypeScript, Sorbet does not allow the use of literals like <code>'V1'</code> or <code>1</code> in <code>T.any</code>. This is by design.</p><p>If you need that, <code>T::Enum</code> is the correct construct to use.</p><h2>Summary and trade-offs</h2><p><code>T.any</code> is the most flexible implementation, and the closest to a textbook tagged union. However it is only defined on Ruby classes, not literals, so if all you need is a list of fixed values like <code>V1</code>, <code>V2</code> and so on, then <code>T::Enum</code> provides a more convenient implementation.</p><p>If values need to be data containers, like events that have different properties, then defining separate classes and building a tagged union using <code>T.any</code> is the only choice. If an exhaustive list of possible values is the main objective — like numbered versions — then <code>T::Enum</code> is preferable, for its literals support and its ease of serialisation and deserialisation.</p></div></article></div><script type="text/javascript">hljs.initHighlightingOnLoad();</script><footer class="page-footer"><nav><ul><li></li><li><a href="/" id="footer_nav_index">&#8613; index</a></li><li></li></ul></nav></footer><div class="comments"><script async="async" crossorigin="anonymous" issue-term="pathname" label="utterance-comment" repo="Velrok/velrok.github.io" src="https://utteranc.es/client.js" theme="github-light"></script></div></div></body></html>
